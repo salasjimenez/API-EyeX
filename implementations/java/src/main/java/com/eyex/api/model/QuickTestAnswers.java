@@ -6,5 +6,10 @@ public record QuickTestAnswers(
         @JsonProperty("reds_look_darker") boolean redsLookDarker,
         @JsonProperty("green_brown_confusion") boolean greenBrownConfusion,
         @JsonProperty("blue_yellow_confusion") boolean blueYellowConfusion,
-        @JsonProperty("colors_look_gray") boolean colorsLookGray
+        @JsonProperty("colors_look_gray") boolean colorsLookGray,
+        @JsonProperty("red_green_confusion") boolean redGreenConfusion,
+        @JsonProperty("red_black_confusion") boolean redBlackConfusion,
+        @JsonProperty("blue_green_confusion") boolean blueGreenConfusion,
+        @JsonProperty("yellow_pink_confusion") boolean yellowPinkConfusion,
+        @JsonProperty("low_saturation_confusion") boolean lowSaturationConfusion
 ) {}

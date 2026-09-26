@@ -2,6 +2,7 @@ package com.eyex.api.web;
 
 import com.eyex.api.model.CustomThemeRequest;
 import com.eyex.api.model.ErrorResponse;
+import com.eyex.api.model.FeedbackRequest;
 import com.eyex.api.model.QuickTestRequest;
 import com.eyex.api.model.QuickTestResponse;
 import com.eyex.api.model.SimulateBatchRequest;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -121,6 +123,18 @@ public class ThemeController {
         if (request == null || request.answers() == null) {
             return ResponseEntity.badRequest().body(new ErrorResponse("invalid_request", "JSON de entrada inválido"));
         }
-        return ResponseEntity.ok(new QuickTestResponse(themeService.suggest(request.answers()), "Resultado orientativo. No es un diagnóstico médico."));
+        var suggestion = themeService.suggestion(request.answers());
+        return ResponseEntity.ok(new QuickTestResponse(
+                suggestion.type(), suggestion.severity(), suggestion.highContrast(),
+                "Resultado orientativo. No es un diagnóstico médico."));
+    }
+
+    @PostMapping("/feedback")
+    public ResponseEntity<?> feedback(@RequestBody(required = false) FeedbackRequest request) {
+        if (request == null || request.helpful() == null || !themeService.supported(request.suggestedType())) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("invalid_feedback", "Feedback inválido"));
+        }
+        System.out.printf("eyex_feedback suggested_type=%s helpful=%s%n", request.suggestedType(), request.helpful());
+        return ResponseEntity.ok(Map.of("status", "recorded"));
     }
 }

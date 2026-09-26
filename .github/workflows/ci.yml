@@ -35,6 +35,7 @@ jobs:
           php-version: "8.4"
       - run: php -l implementations/php/public/index.php
       - run: php -l implementations/php/simulation.php
+      - run: php -l implementations/php/v150.php
 
   typescript:
     runs-on: ubuntu-latest
@@ -170,6 +171,7 @@ jobs:
           node-version: "22"
       - run: node --check frontend/html-js/assets/app.js
       - run: node --check frontend/html-js/eyex.js
+      - run: node --check extension/browser/background.js
       - run: node --check extension/browser/content.js
       - run: node --check extension/browser/popup.js
 
@@ -207,7 +209,7 @@ jobs:
           echo $! > parity-logs/php.pid
           (cd implementations/typescript-node && EYEX_PORT=18082 npm start) >parity-logs/typescript.log 2>&1 &
           echo $! > parity-logs/typescript.pid
-          (cd implementations/java && EYEX_PORT=18083 java -jar target/eyex-api-java-1.2.0.jar) >parity-logs/java.log 2>&1 &
+          (cd implementations/java && EYEX_PORT=18083 java -jar target/eyex-api-java-1.5.0.jar) >parity-logs/java.log 2>&1 &
           echo $! > parity-logs/java.pid
       - name: Verify HTTP parity
         run: python3 tests/parity.py

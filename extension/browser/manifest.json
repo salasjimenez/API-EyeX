@@ -1,26 +1,29 @@
 {
   "manifest_version": 3,
   "name": "EyeX",
-  "description": "Aplica una paleta EyeX sobre la página actual.",
-  "version": "1.2.0",
+  "description": "Aplica una paleta EyeX sobre la pestaña activa.",
+  "version": "1.5.0",
   "permissions": [
-    "storage"
+    "storage",
+    "activeTab",
+    "scripting"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_title": "EyeX"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ],
-      "run_at": "document_idle"
+  "commands": {
+    "toggle-eyex": {
+      "suggested_key": {
+        "default": "Alt+Shift+E",
+        "mac": "Alt+Shift+E"
+      },
+      "description": "Activar o desactivar EyeX en la pestaña actual"
     }
-  ],
+  },
   "browser_specific_settings": {
     "gecko": {
       "id": "eyex@local",

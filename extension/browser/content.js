@@ -19,11 +19,16 @@
     if (old) old.remove();
   }
 
+  function resolvedMode(value) {
+    if (value === 'dark' || value === 'light') return value;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
   function apply(settings) {
     removeTheme();
     if (!settings.eyexEnabled) return;
     var typePalettes = palettes[settings.eyexType] || palettes.deuteranopia;
-    var p = typePalettes[settings.eyexMode] || typePalettes.dark;
+    var p = typePalettes[resolvedMode(settings.eyexMode)] || typePalettes.light;
     var style = document.createElement('style');
     style.id = 'eyex-extension-style';
     style.textContent = [
@@ -37,10 +42,17 @@
   }
 
   function read() {
-    storageGet({ eyexType: 'deuteranopia', eyexMode: 'dark', eyexEnabled: false }, apply);
+    storageGet({ eyexType: 'deuteranopia', eyexMode: 'auto', eyexEnabled: false }, apply);
   }
 
   read();
-  var storage = typeof browser !== 'undefined' ? browser.storage : chrome.storage;
-  storage.onChanged.addListener(read);
+  if (!window.__eyexStorageListenerInstalled) {
+    window.__eyexStorageListenerInstalled = true;
+    var storage = typeof browser !== 'undefined' ? browser.storage : chrome.storage;
+    storage.onChanged.addListener(read);
+    if (window.matchMedia) {
+      var media = window.matchMedia('(prefers-color-scheme: dark)');
+      if (media.addEventListener) media.addEventListener('change', read);
+    }
+  }
 }());

@@ -31,7 +31,8 @@ func (a *API) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v1/theme/types", a.types)
 	mux.HandleFunc("POST /api/v1/theme/custom", a.customTheme)
-	mux.HandleFunc("POST /api/v1/test/suggest", a.quickTest)
+	mux.HandleFunc("POST /api/v1/test/suggest", a.quickTestV150)
+	mux.HandleFunc("POST /api/v1/feedback", a.feedback)
 	mux.HandleFunc("POST /api/v1/simulate", a.simulate)
 	mux.HandleFunc("POST /api/v1/simulate/batch", a.simulateBatch)
 	mux.HandleFunc("GET /api/v1/theme/{type}", a.theme)
@@ -308,6 +309,7 @@ func localizedMessage(acceptLanguage, spanish string) string {
 		"Método no permitido":                        "Method not allowed",
 		"Recurso no encontrado":                      "Resource not found",
 		"Error interno del servidor":                 "Internal server error",
+		"Feedback inválido":                          "Invalid feedback",
 	}
 	if translated, ok := translations[spanish]; ok {
 		return translated

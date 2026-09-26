@@ -98,15 +98,35 @@ public class ThemeService {
         return response(req.type(), ensureTextContrast(palette));
     }
 
-    public String suggest(QuickTestAnswers a) {
-        if (a == null) return "normal";
-        if (a.colorsLookGray()) return "achromatopsia";
-        if (a.blueYellowConfusion()) return "tritanopia";
-        if (a.redsLookDarker() && a.greenBrownConfusion()) return "protanopia";
-        if (a.greenBrownConfusion()) return "deuteranopia";
-        if (a.redsLookDarker()) return "protanopia";
-        return "normal";
+    public record Suggestion(String type, String severity, boolean highContrast) {}
+
+    public Suggestion suggestion(QuickTestAnswers a) {
+        if (a == null) return new Suggestion("normal", "mild", false);
+        int protan = 0, deutan = 0, tritan = 0, gray = 0;
+        if (a.redsLookDarker()) protan += 2;
+        if (a.greenBrownConfusion()) { protan += 1; deutan += 2; }
+        if (a.blueYellowConfusion()) tritan += 3;
+        if (a.colorsLookGray()) gray += 4;
+        if (a.redGreenConfusion()) { protan += 1; deutan += 2; }
+        if (a.redBlackConfusion()) protan += 2;
+        if (a.blueGreenConfusion()) { tritan += 2; deutan += 1; }
+        if (a.yellowPinkConfusion()) tritan += 2;
+        if (a.lowSaturationConfusion()) gray += 2;
+
+        String type = "normal";
+        int max = 0;
+        for (var candidate : List.of(
+                Map.entry("achromatopsia", gray),
+                Map.entry("tritanopia", tritan),
+                Map.entry("protanopia", protan),
+                Map.entry("deuteranopia", deutan))) {
+            if (candidate.getValue() > max) { type = candidate.getKey(); max = candidate.getValue(); }
+        }
+        String severity = (max >= 5 || type.equals("achromatopsia")) ? "severe" : (max >= 3 ? "moderate" : "mild");
+        return new Suggestion(type, severity, type.equals("achromatopsia") || max >= 5);
     }
+
+    public String suggest(QuickTestAnswers a) { return suggestion(a).type(); }
 
     private void validateOptions(String severity, String mode) {
         if (!blank(severity) && !List.of("mild", "moderate", "severe").contains(severity)) throw new IllegalArgumentException("severity debe ser mild, moderate o severe");

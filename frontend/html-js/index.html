@@ -3,197 +3,48 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="EyeX ofrece temas de pantalla preparados para daltonismo, baja visión y alto contraste mediante una API HTTP sencilla.">
-  <title>EyeX API — Temas de pantalla accesibles</title>
+  <meta name="description" content="EyeX adapta colores para personas con daltonismo mediante detección visual o selección manual simple.">
+  <title>EyeX — Accesibilidad de color</title>
   <link rel="icon" type="image/png" href="/assets/logo.png">
   <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="container topbar-inner">
-      <a class="brand" href="/" aria-label="EyeX inicio">EyeX <span>API</span></a>
-      <nav class="nav" aria-label="Navegación principal">
-        <a href="#demo">Demo</a>
-        <a href="#simulate">Simulación</a>
-        <a href="#custom">Marca</a>
-        <a href="#docs">API</a>
-        <a href="#test">Test orientativo</a>
-      </nav>
-    </div>
-  </header>
-
+  <header class="topbar"><div class="container topbar-inner"><a class="brand" href="/">EyeX <span>v1.5</span></a><span id="mode-indicator" class="mode-indicator"></span></div></header>
   <main>
-    <section class="hero">
-      <div class="container hero-grid">
-        <div>
-          <p class="kicker">Tema global para interfaces</p>
-          <h1>Paletas completas para adaptar una pantalla en una sola consulta.</h1>
-          <p class="intro">EyeX devuelve colores coordinados para fondos, superficies, texto, acciones y estados. Puede ajustar intensidad, modo claro u oscuro, alto contraste y paletas de marca.</p>
-          <div class="hero-actions">
-            <a class="button primary" href="#demo">Probar EyeX</a>
-            <a class="button" href="#docs">Ver endpoints</a>
-          </div>
-        </div>
-        <div class="endpoint-box" aria-label="Endpoint principal">
-          <div class="endpoint-title">Endpoint principal</div>
-          <code>GET /api/v1/theme/{type}</code>
-          <div class="endpoint-note">JSON · HTTP · WCAG AA para texto sobre fondo y superficie</div>
-        </div>
+    <section class="hero"><div class="container narrow"><p class="kicker">Accesibilidad visual orientada a color</p><h1>Dos formas simples de adaptar los colores.</h1><p class="intro">No necesitas conocer nombres técnicos. EyeX detecta el modo claro u oscuro de tu dispositivo y mantiene disponible la API v1 completa para integraciones.</p></div></section>
+
+    <section class="section"><div class="container narrow">
+      <div class="choice-grid" aria-label="Cómo quieres configurar EyeX">
+        <button id="auto-choice" class="choice-card" type="button"><strong>Detección automática</strong><span>No sé mi tipo. Quiero hacer una prueba visual rápida.</span></button>
+        <button id="manual-choice" class="choice-card" type="button"><strong>Selección manual</strong><span>Ya conozco mi diagnóstico y quiero elegirlo directamente.</span></button>
       </div>
-    </section>
+      <p id="theme-status" class="status" aria-live="polite">EyeX está listo.</p>
+    </div></section>
 
-    <section id="demo" class="section">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <h2>Demo del tema</h2>
-            <p>Los controles consultan la API y aplican el resultado a esta página.</p>
-          </div>
-        </div>
+    <section id="auto-panel" class="section section-alt hidden" aria-labelledby="auto-title"><div class="container narrow">
+      <div class="section-heading"><div><h2 id="auto-title">Prueba visual rápida</h2><p>Observa cada comparación. Marca solo las parejas que te resultan difíciles de distinguir.</p></div><span id="test-progress" class="progress">0/5</span></div>
+      <form id="visual-test" class="visual-test">
+        <fieldset class="visual-question" data-answer="red_green_confusion"><legend>Comparación 1</legend><div class="image-pair"><svg viewBox="0 0 240 120" role="img" aria-label="círculos rojos sobre fondo verde"><rect width="240" height="120" fill="#4E8F55"/><circle cx="60" cy="60" r="30" fill="#C94C4C"/><circle cx="180" cy="60" r="30" fill="#D66A55"/></svg><svg viewBox="0 0 240 120" role="img" aria-label="círculos con contraste alternativo"><rect width="240" height="120" fill="#4A90D9"/><circle cx="60" cy="60" r="30" fill="#FFD166"/><circle cx="180" cy="60" r="30" fill="#FFFFFF"/></svg></div><div class="answer-row"><label><input type="radio" name="red_green_confusion" value="true"> Se parecen mucho</label><label><input type="radio" name="red_green_confusion" value="false" checked> Los distingo</label></div></fieldset>
+        <fieldset class="visual-question" data-answer="red_black_confusion"><legend>Comparación 2</legend><div class="image-pair"><svg viewBox="0 0 240 120" role="img" aria-label="formas rojas y oscuras"><rect width="240" height="120" fill="#252525"/><rect x="35" y="30" width="70" height="60" rx="8" fill="#9E3D37"/><rect x="135" y="30" width="70" height="60" rx="8" fill="#3B3535"/></svg><svg viewBox="0 0 240 120" role="img" aria-label="formas claras de alto contraste"><rect width="240" height="120" fill="#F7F8FA"/><rect x="35" y="30" width="70" height="60" rx="8" fill="#256EA6"/><rect x="135" y="30" width="70" height="60" rx="8" fill="#916B00"/></svg></div><div class="answer-row"><label><input type="radio" name="red_black_confusion" value="true"> Se parecen mucho</label><label><input type="radio" name="red_black_confusion" value="false" checked> Los distingo</label></div></fieldset>
+        <fieldset class="visual-question" data-answer="blue_yellow_confusion"><legend>Comparación 3</legend><div class="image-pair"><svg viewBox="0 0 240 120" role="img" aria-label="franjas azules y amarillas"><rect width="120" height="120" fill="#3C73B9"/><rect x="120" width="120" height="120" fill="#D3B64E"/><circle cx="120" cy="60" r="26" fill="#F7F7F7"/></svg><svg viewBox="0 0 240 120" role="img" aria-label="franjas magenta y verde"><rect width="120" height="120" fill="#9B3F80"/><rect x="120" width="120" height="120" fill="#167A65"/><circle cx="120" cy="60" r="26" fill="#FFFFFF"/></svg></div><div class="answer-row"><label><input type="radio" name="blue_yellow_confusion" value="true"> Se parecen mucho</label><label><input type="radio" name="blue_yellow_confusion" value="false" checked> Los distingo</label></div></fieldset>
+        <fieldset class="visual-question" data-answer="blue_green_confusion"><legend>Comparación 4</legend><div class="image-pair"><svg viewBox="0 0 240 120" role="img" aria-label="bloques azul y verde"><rect x="15" y="15" width="95" height="90" rx="12" fill="#3577A8"/><rect x="130" y="15" width="95" height="90" rx="12" fill="#3D8C76"/></svg><svg viewBox="0 0 240 120" role="img" aria-label="bloques rosa y naranja"><rect x="15" y="15" width="95" height="90" rx="12" fill="#B04D91"/><rect x="130" y="15" width="95" height="90" rx="12" fill="#C26E2E"/></svg></div><div class="answer-row"><label><input type="radio" name="blue_green_confusion" value="true"> Se parecen mucho</label><label><input type="radio" name="blue_green_confusion" value="false" checked> Los distingo</label></div></fieldset>
+        <fieldset class="visual-question" data-answer="low_saturation_confusion"><legend>Comparación 5</legend><div class="image-pair"><svg viewBox="0 0 240 120" role="img" aria-label="círculos de varios colores suaves"><rect width="240" height="120" fill="#E9E9E9"/><circle cx="55" cy="60" r="28" fill="#C77C7C"/><circle cx="120" cy="60" r="28" fill="#7DA98A"/><circle cx="185" cy="60" r="28" fill="#7E91B8"/></svg><svg viewBox="0 0 240 120" role="img" aria-label="círculos grises"><rect width="240" height="120" fill="#E9E9E9"/><circle cx="55" cy="60" r="28" fill="#909090"/><circle cx="120" cy="60" r="28" fill="#9E9E9E"/><circle cx="185" cy="60" r="28" fill="#8A8A8A"/></svg></div><div class="answer-row"><label><input type="radio" name="low_saturation_confusion" value="true"> Se parecen mucho</label><label><input type="radio" name="low_saturation_confusion" value="false" checked> Los distingo</label></div></fieldset>
+        <button class="button primary" type="submit">Aplicar recomendación</button>
+      </form>
+      <div id="suggestion-result" class="result-card hidden" aria-live="polite"><strong id="suggestion-title"></strong><p id="suggestion-copy"></p><div class="feedback-row"><span>¿Te ayudó esta sugerencia?</span><button type="button" data-feedback="true">Sí</button><button type="button" data-feedback="false">No</button><span id="feedback-status"></span></div></div>
+    </div></section>
 
-        <div class="controls-grid" aria-label="Controles de tema">
-          <label class="field"><span>Tipo</span><select id="theme-type"></select></label>
-          <label class="field"><span>Intensidad</span><select id="severity"><option value="mild">Suave</option><option value="moderate" selected>Moderada</option><option value="severe">Severa</option></select></label>
-          <label class="field"><span>Modo</span><select id="mode"><option value="light">Claro</option><option value="dark" selected>Oscuro</option></select></label>
-          <label class="check-field"><input id="high-contrast" type="checkbox"><span>Alto contraste</span></label>
-        </div>
+    <section id="manual-panel" class="section section-alt hidden" aria-labelledby="manual-title"><div class="container narrow"><h2 id="manual-title">Selección manual</h2><p class="section-copy">Elige el nombre común que coincide con tu diagnóstico. Internamente EyeX sigue usando los valores técnicos de la API.</p><div class="manual-grid"><button type="button" data-manual-type="deuteranopia"><strong>Rojo-verde</strong><span>Dificultad principal entre rojos y verdes.</span></button><button type="button" data-manual-type="tritanopia"><strong>Azul-amarillo</strong><span>Dificultad principal entre azules y amarillos.</span></button><button type="button" data-manual-type="achromatopsia"><strong>Todo en grises</strong><span>Percepción muy reducida o ausente del color.</span></button></div></div></section>
 
-        <p id="theme-status" class="status" aria-live="polite">Consultando EyeX...</p>
+    <section id="preview" class="section"><div class="container">
+      <div class="section-heading"><div><h2>Vista previa</h2><p>El tema se aplica sin preguntar claro/oscuro: se usa la preferencia del sistema.</p></div><strong id="active-type-label">Sin adaptación</strong></div>
+      <label class="severity-control"><span>Intensidad visual</span><input id="theme-severity" type="range" min="0" max="100" step="1" value="70"><output id="theme-severity-label">Moderada</output></label>
+      <article class="sample-window"><div class="sample-toolbar"><span>Panel de ejemplo</span><strong id="contrast-badge">Contraste</strong></div><div class="sample-content"><h3>Interfaz adaptable</h3><p>Texto, acciones y estados cambian con la paleta de EyeX.</p><div class="sample-actions"><button class="sample-primary">Acción principal</button><button class="sample-secondary">Secundaria</button></div><div class="messages"><div class="message error">Estado de error</div><div class="message success">Operación correcta</div></div></div></article>
+    </div></section>
 
-        <div class="demo-layout">
-          <article class="sample-window">
-            <div class="sample-toolbar"><span>Panel de ejemplo</span><strong id="contrast-badge">Contraste</strong></div>
-            <div class="sample-content">
-              <h3>Interfaz adaptable</h3>
-              <p>Los componentes usan las variables CSS globales devueltas por la API.</p>
-              <div class="sample-actions"><button class="sample-primary">Acción principal</button><button class="sample-secondary">Secundaria</button></div>
-              <div class="messages"><div class="message error">Estado de error</div><div class="message success">Operación correcta</div></div>
-            </div>
-          </article>
-          <aside class="palette-panel">
-            <h3>Paleta activa</h3>
-            <dl id="palette-list" class="palette-list"></dl>
-          </aside>
-        </div>
-      </div>
-    </section>
-
-    <section id="simulate" class="section section-alt">
-      <div class="container">
-        <h2>Simulación de visión cromática</h2>
-        <p class="section-copy">Simula un color con las matrices de Machado, Oliveira &amp; Fernandes (2009). La severidad es continua entre 0 y 1.</p>
-        <div class="simulation-grid">
-          <form id="simulation-form" class="simulation-form">
-            <label class="field"><span>Color</span><input id="simulation-color" type="color" value="#FF0000"></label>
-            <label class="field"><span>HEX</span><input id="simulation-hex" value="#FF0000" maxlength="7" spellcheck="false"></label>
-            <label class="field"><span>Tipo</span><select id="simulation-type"><option value="protanopia">Protanopia</option><option value="deuteranopia">Deuteranopia</option><option value="tritanopia">Tritanopia</option></select></label>
-            <label class="field"><span>Severidad: <strong id="simulation-severity-value">1.00</strong></span><input id="simulation-severity" type="range" min="0" max="1" step="0.05" value="1"></label>
-            <button class="button primary" type="submit">Simular color</button>
-          </form>
-          <div class="simulation-result" aria-live="polite">
-            <div class="simulation-swatch" id="simulation-original"><span>Original <strong id="simulation-original-value">#FF0000</strong></span></div>
-            <div class="simulation-swatch" id="simulation-output"><span>Simulado <strong id="simulation-output-value">—</strong></span></div>
-            <p id="simulation-status" class="status">Listo para simular.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="custom" class="section section-alt">
-      <div class="container">
-        <h2>Adaptar una paleta de marca</h2>
-        <p class="section-copy">Envía tus siete colores a <code>POST /api/v1/theme/custom</code>. EyeX conserva la identidad visual en lo posible y ajusta los acentos según el modo elegido.</p>
-        <form id="custom-form" class="custom-form">
-          <div id="custom-colors" class="color-inputs"></div>
-          <button class="button primary" type="submit">Adaptar esta paleta</button>
-          <span id="custom-status" class="inline-status" aria-live="polite"></span>
-        </form>
-      </div>
-    </section>
-
-    <section id="docs" class="section">
-      <div class="container">
-        <h2>API HTTP</h2>
-        <p class="section-copy">El contrato original sigue disponible. Los parámetros y endpoints nuevos son aditivos.</p>
-        <div class="docs-grid">
-          <article class="doc-card">
-            <div class="method-line"><span class="method">GET</span><code>/api/v1/theme/{type}</code></div>
-            <p>Parámetros opcionales: <code>severity=mild|moderate|severe</code>, <code>mode=dark|light</code> y <code>high_contrast=true|false</code>.</p>
-            <pre><code>GET /api/v1/theme/deuteranopia?severity=moderate&amp;mode=dark&amp;high_contrast=true</code></pre>
-          </article>
-          <article class="doc-card">
-            <div class="method-line"><span class="method">GET</span><code>/api/v1/theme/types</code></div>
-            <p>Lista los modos disponibles, incluido <code>low_vision</code>.</p>
-            <pre><code>{"types":["normal","protanopia","deuteranopia","tritanopia","achromatopsia","low_vision"]}</code></pre>
-          </article>
-          <article class="doc-card">
-            <div class="method-line"><span class="method post">POST</span><code>/api/v1/theme/custom</code></div>
-            <p>Ajusta una paleta propia manteniendo el mismo formato de respuesta del tema.</p>
-            <pre><code>{
-  "type": "protanopia",
-  "palette": { "background": "#101820", "surface": "#182430", "text": "#F8F9FA", "primary": "#E63946", "secondary": "#2A9D8F", "error": "#D62828", "success": "#2A9D8F" }
-}</code></pre>
-          </article>
-          <article class="doc-card">
-            <div class="method-line"><span class="method post">POST</span><code>/api/v1/test/suggest</code></div>
-            <p>Devuelve una sugerencia orientativa a partir de cuatro preguntas. No es un diagnóstico médico.</p>
-            <pre><code>{"suggested_type":"tritanopia","disclaimer":"Resultado orientativo. No es un diagnóstico médico."}</code></pre>
-          </article>
-          <article class="doc-card">
-            <div class="method-line"><span class="method post">POST</span><code>/api/v1/simulate</code></div>
-            <p>Simula un color con severidad continua de 0 a 1 mediante el modelo <code>machado-2009</code>.</p>
-            <pre><code>{"hex":"#FF0000","type":"protanopia","severity":0.65}</code></pre>
-          </article>
-          <article class="doc-card">
-            <div class="method-line"><span class="method post">POST</span><code>/api/v1/simulate/batch</code></div>
-            <p>Simula de 1 a 256 colores usando el mismo tipo y severidad.</p>
-            <pre><code>{"colors":["#FF0000","#00FF00"],"type":"deuteranopia","severity":0.5}</code></pre>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="test" class="section section-alt">
-      <div class="container narrow">
-        <h2>Test rápido orientativo</h2>
-        <p class="section-copy">Marca las situaciones que reconoces. El resultado solo sirve como guía para elegir un tema de prueba.</p>
-        <form id="quick-test" class="test-form">
-          <label><input type="checkbox" name="reds_look_darker"> Algunos rojos me parecen mucho más oscuros de lo esperado.</label>
-          <label><input type="checkbox" name="green_brown_confusion"> Suelo confundir verdes con marrones o tonos similares.</label>
-          <label><input type="checkbox" name="blue_yellow_confusion"> Suelo confundir azules con amarillos o tonos próximos.</label>
-          <label><input type="checkbox" name="colors_look_gray"> La mayoría de colores me parecen grises o casi sin color.</label>
-          <div><button class="button primary" type="submit">Obtener sugerencia</button></div>
-        </form>
-        <p id="test-result" class="test-result" aria-live="polite"></p>
-      </div>
-    </section>
-
-    <section id="integracion" class="section">
-      <div class="container">
-        <h2>Integración rápida</h2>
-        <div class="integration-grid">
-          <div>
-            <h3>CSS estático</h3>
-            <p>Para usar paletas predefinidas sin llamadas HTTP:</p>
-            <pre><code>&lt;link rel="stylesheet" href="https://TU_HOST/eyex.css"&gt;
-&lt;html data-eyex-theme="deuteranopia" data-eyex-mode="dark"&gt;</code></pre>
-          </div>
-          <div>
-            <h3>Widget embebible</h3>
-            <p>El script detecta la misma URL donde está alojada la API y añade un botón flotante:</p>
-            <pre><code>&lt;script src="https://TU_HOST/eyex.js"&gt;&lt;/script&gt;</code></pre>
-          </div>
-        </div>
-      </div>
-    </section>
+    <section id="simulate" class="section section-alt"><div class="container"><h2>Comparador de color</h2><p class="section-copy">Mueve la rueda de color: EyeX consulta <code>/api/v1/simulate</code> y actualiza el antes/después en vivo.</p><div class="simulation-grid"><div class="simulation-controls"><label class="color-wheel"><span>Color a comparar</span><input id="simulation-color" type="color" value="#FF0000"><strong id="simulation-color-name">Rojo</strong></label><label class="severity-control"><span>Intensidad de simulación</span><input id="simulation-severity" type="range" min="0" max="100" step="1" value="100"><output id="simulation-severity-label">Máxima</output></label></div><div class="simulation-result" aria-live="polite"><div class="simulation-swatch" id="simulation-original"><span>Original · <strong id="simulation-original-name">Rojo</strong></span></div><div class="simulation-swatch" id="simulation-output"><span>Simulado · <strong id="simulation-output-name">—</strong></span></div><p id="simulation-status" class="status">Vista previa lista.</p></div></div></div></section>
   </main>
-
-  <footer class="footer">
-    <div class="container footer-inner">
-      <img class="footer-logo" src="/assets/logo.png" alt="Logo de EyeX">
-      <div class="footer-copy"><strong>EyeX</strong><span>API de temas de pantalla accesibles.</span></div>
-    </div>
-  </footer>
+  <footer class="footer"><div class="container"><strong>EyeX v1.5.0</strong> · La prueba es orientativa y no sustituye un diagnóstico profesional.</div></footer>
   <script src="/assets/app.js" defer></script>
 </body>
 </html>

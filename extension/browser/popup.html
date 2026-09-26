@@ -1,1 +1,26 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><style>body{font:13px Arial,sans-serif;width:230px;padding:12px;margin:0}label{display:grid;gap:4px;margin:0 0 9px}select,button{height:34px;font:inherit}button{width:100%;background:#222831;color:#fff;border:0;cursor:pointer}.row{display:flex;gap:8px;align-items:center;margin:10px 0}</style></head><body><strong>EyeX</strong><label>Modo<select id="type"><option>normal</option><option>protanopia</option><option>deuteranopia</option><option>tritanopia</option><option>achromatopsia</option><option>low_vision</option></select></label><label>Tema<select id="mode"><option value="dark">Oscuro</option><option value="light">Claro</option></select></label><label class="row"><input id="enabled" type="checkbox"> Activar en sitios web</label><button id="save">Aplicar</button><script src="popup.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body{font:13px Arial,sans-serif;width:260px;padding:14px;margin:0;color:#20252b;background:#fff}
+    h1{font-size:17px;margin:0 0 4px}.hint{margin:0 0 12px;color:#5d6670;font-size:11px;line-height:1.4}
+    .types{display:grid;gap:7px}.type{height:36px;border:1px solid #9aa2aa;background:#fff;text-align:left;padding:0 10px;cursor:pointer}.type[aria-pressed="true"]{border:2px solid #222831;font-weight:700}
+    .row{display:flex;gap:8px;align-items:center;margin:12px 0}.apply{width:100%;height:36px;border:0;background:#222831;color:#fff;font-weight:700;cursor:pointer}
+    kbd{background:#eef0f2;border:1px solid #c4c9cf;border-radius:3px;padding:1px 4px}
+  </style>
+</head>
+<body>
+  <h1>EyeX</h1>
+  <p class="hint">Elige una opción conocida. El modo claro u oscuro se detecta automáticamente.</p>
+  <div class="types" role="group" aria-label="Tipo de visión">
+    <button class="type" data-type="deuteranopia" type="button">Rojo-verde</button>
+    <button class="type" data-type="tritanopia" type="button">Azul-amarillo</button>
+    <button class="type" data-type="achromatopsia" type="button">Todo en grises</button>
+  </div>
+  <label class="row"><input id="enabled" type="checkbox"> Aplicar en esta pestaña</label>
+  <button id="save" class="apply" type="button">Aplicar</button>
+  <p class="hint">Atajo: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> para alternar.</p>
+  <script src="popup.js"></script>
+</body>
+</html>

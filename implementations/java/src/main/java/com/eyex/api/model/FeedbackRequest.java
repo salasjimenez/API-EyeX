@@ -2,9 +2,7 @@ package com.eyex.api.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record QuickTestResponse(
+public record FeedbackRequest(
         @JsonProperty("suggested_type") String suggestedType,
-        String severity,
-        @JsonProperty("high_contrast") boolean highContrast,
-        String disclaimer
+        Boolean helpful
 ) {}

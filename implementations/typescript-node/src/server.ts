@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { MACHADO_MODEL, isSimulationType, normalizeSimulationHex, normalizeSimulationSeverity, simulateMachadoHex } from './simulation.js';
+import { localizedMessage, suggestV150, validateFeedback, type FeedbackRequest } from './v150.js';
 
 type ThemeType = 'normal' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia' | 'low_vision';
 type Severity = 'mild' | 'moderate' | 'severe';
@@ -42,6 +43,11 @@ interface QuickTestRequest {
     green_brown_confusion: boolean;
     blue_yellow_confusion: boolean;
     colors_look_gray: boolean;
+    red_green_confusion?: boolean;
+    red_black_confusion?: boolean;
+    blue_green_confusion?: boolean;
+    yellow_pink_confusion?: boolean;
+    low_saturation_confusion?: boolean;
   };
 }
 
@@ -222,6 +228,16 @@ function customTheme(body: CustomThemeRequest): ThemeResponse | ErrorResponse {
 const app = Fastify({ logger: true });
 await app.register(cors, { origin: process.env.EYEX_ALLOWED_ORIGIN || '*', methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Accept', 'Accept-Language', 'If-None-Match', 'X-API-Key'] });
 
+app.addHook('preSerialization', async (request, _reply, payload) => {
+  if (payload !== null && typeof payload === 'object' && !Array.isArray(payload)) {
+    const body = payload as Record<string, unknown>;
+    if (typeof body.error === 'string' && typeof body.message === 'string') {
+      return { ...body, message: localizedMessage(request.headers['accept-language'], body.message) };
+    }
+  }
+  return payload;
+});
+
 app.setErrorHandler((error, _request, reply) => {
   const statusCode =
     typeof error === 'object' &&
@@ -294,15 +310,16 @@ app.post<{ Body: CustomThemeRequest; Reply: ThemeResponse | ErrorResponse }>('/a
   return result;
 });
 
-app.post<{ Body: QuickTestRequest }>('/api/v1/test/suggest', async (request) => {
-  const a = request.body.answers;
-  let suggested_type: ThemeType = 'normal';
-  if (a.colors_look_gray) suggested_type = 'achromatopsia';
-  else if (a.blue_yellow_confusion) suggested_type = 'tritanopia';
-  else if (a.reds_look_darker && a.green_brown_confusion) suggested_type = 'protanopia';
-  else if (a.green_brown_confusion) suggested_type = 'deuteranopia';
-  else if (a.reds_look_darker) suggested_type = 'protanopia';
-  return { suggested_type, disclaimer: 'Resultado orientativo. No es un diagnóstico médico.' };
+app.post<{ Body: QuickTestRequest }>('/api/v1/test/suggest', async (request, reply) => {
+  if (!request.body || !request.body.answers) return reply.code(400).send({ error: 'invalid_request', message: 'JSON de entrada inválido' });
+  return suggestV150(request.body.answers);
+});
+
+app.post<{ Body: FeedbackRequest }>('/api/v1/feedback', async (request, reply) => {
+  const feedback = validateFeedback(request.body || {}, supportedTypes);
+  if (!feedback) return reply.code(400).send({ error: 'invalid_feedback', message: 'Feedback inválido' });
+  request.log.info({ event: 'eyex_feedback', ...feedback }, 'EyeX feedback');
+  return { status: 'recorded' };
 });
 
 const port = Number.parseInt(process.env.EYEX_PORT || '8080', 10);

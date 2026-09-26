@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'simulation.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'v150.php';
 
 const SUPPORTED_TYPES = ['normal', 'protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia', 'low_vision'];
 
@@ -51,6 +52,9 @@ function loadRootEnv(): void {
     }
 }
 function jsonResponse(int $status, array $payload): never {
+    if (isset($payload['error'], $payload['message']) && is_string($payload['message'])) {
+        $payload['message'] = eyexLocalizedMessage($payload['message']);
+    }
     http_response_code($status); header('Content-Type: application/json; charset=utf-8');
     echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), "\n"; exit;
 }
@@ -121,5 +125,6 @@ if($method==='POST'&&$path==='/api/v1/simulate/batch'){
     jsonResponse(200,['type'=>$type,'severity'=>$severity,'model'=>MACHADO_MODEL,'results'=>$results]);
 }
 if($method==='POST'&&$path==='/api/v1/theme/custom'){$body=json_decode(file_get_contents('php://input')?:'',true);if(!is_array($body))jsonResponse(400,['error'=>'invalid_request','message'=>'JSON de entrada inválido']);$result=customTheme($body);jsonResponse(isset($result['error'])?400:200,$result);}
-if($method==='POST'&&$path==='/api/v1/test/suggest'){$body=json_decode(file_get_contents('php://input')?:'',true);if(!is_array($body)||!is_array($body['answers']??null))jsonResponse(400,['error'=>'invalid_request','message'=>'JSON de entrada inválido']);$a=$body['answers'];$suggested='normal';if(($a['colors_look_gray']??false)===true)$suggested='achromatopsia';elseif(($a['blue_yellow_confusion']??false)===true)$suggested='tritanopia';elseif(($a['reds_look_darker']??false)===true&&($a['green_brown_confusion']??false)===true)$suggested='protanopia';elseif(($a['green_brown_confusion']??false)===true)$suggested='deuteranopia';elseif(($a['reds_look_darker']??false)===true)$suggested='protanopia';jsonResponse(200,['suggested_type'=>$suggested,'disclaimer'=>'Resultado orientativo. No es un diagnóstico médico.']);}
-jsonResponse(404,['error'=>'not_found']);
+if($method==='POST'&&$path==='/api/v1/test/suggest'){$body=json_decode(file_get_contents('php://input')?:'',true);if(!is_array($body)||!is_array($body['answers']??null))jsonResponse(400,['error'=>'invalid_request','message'=>'JSON de entrada inválido']);jsonResponse(200,eyexV150Suggest($body['answers']));}
+if($method==='POST'&&$path==='/api/v1/feedback'){$body=json_decode(file_get_contents('php://input')?:'',true);[$status,$payload]=eyexV150Feedback($body);jsonResponse($status,$payload);}
+jsonResponse(404,['error'=>'not_found','message'=>'Recurso no encontrado']);

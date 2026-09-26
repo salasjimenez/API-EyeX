@@ -9,6 +9,8 @@
 
 EyeX es una API de accesibilidad visual orientada a color. Entrega temas para daltonismo, baja visión y alto contraste, y desde `v1.2.0` también permite simular cómo cambia un color bajo protanopia, deuteranopia o tritanopia con severidad continua.
 
+Desde `v1.5.0`, la experiencia para usuarios finales se simplifica a dos caminos: detección automática mediante una prueba visual y selección manual guiada. La API técnica `/api/v1/` mantiene compatibilidad con las integraciones existentes.
+
 El contrato HTTP principal está disponible en Go y mantiene implementaciones equivalentes en PHP, TypeScript/Node y Java. El repositorio también incluye clientes web, SDKs, una extensión de navegador y manifiestos de infraestructura. Este README se concentra en desarrollo y uso del API; el hosting no forma parte del alcance de esta versión.
 
 ## Quickstart — 30 segundos
@@ -43,6 +45,32 @@ Resultado de la simulación:
 
 La web principal queda disponible en `http://localhost:8080/` y el contrato OpenAPI en `http://localhost:8080/openapi.yaml`.
 
+## Experiencia de usuario — v1.5.0
+
+### Detección automática
+
+La interfaz ofrece una prueba visual rápida basada en comparaciones de color. El usuario no necesita conocer términos médicos ni parámetros técnicos.
+
+Las respuestas se envían a `POST /api/v1/test/suggest`, que devuelve `suggested_type`, `severity`, `high_contrast` y `disclaimer`. La interfaz aplica automáticamente la sugerencia y respeta `prefers-color-scheme` para seleccionar modo claro u oscuro.
+
+El resultado es orientativo y no sustituye un diagnóstico profesional.
+
+### Selección manual
+
+La interfaz presenta tres opciones simples:
+
+| Opción visible | Valor técnico |
+| --- | --- |
+| Rojo-verde | `deuteranopia` |
+| Azul-amarillo | `tritanopia` |
+| Todo en grises | `achromatopsia` |
+
+La API continúa soportando los tipos técnicos históricos, incluyendo `protanopia`, `normal` y `low_vision`.
+
+### Comparación visual
+
+La selección de color utiliza un control visual en lugar de requerir que el usuario escriba valores HEX. El resultado original y el simulado se muestran lado a lado y la severidad se presenta como una escala visual. Internamente, `/api/v1/simulate` conserva el rango técnico `0..1`.
+
 ## Funcionalidad
 
 EyeX incluye:
@@ -53,7 +81,8 @@ EyeX incluye:
 - opción de alto contraste;
 - validación WCAG AA de texto contra `background` y `surface` con umbral 4.5:1;
 - adaptación de paletas propias con `POST /api/v1/theme/custom`;
-- test orientativo con `POST /api/v1/test/suggest`;
+- test orientativo ampliado con `POST /api/v1/test/suggest`;
+- registro de utilidad de la sugerencia con `POST /api/v1/feedback`;
 - simulación de color individual con `POST /api/v1/simulate`;
 - simulación de hasta 256 colores con `POST /api/v1/simulate/batch`;
 - implementación de simulación equivalente en Go, PHP, TypeScript/Node y Java;
@@ -67,7 +96,8 @@ EyeX incluye:
 | `GET` | `/api/v1/theme/types` | Lista tipos de tema. |
 | `GET` | `/api/v1/theme/{type}` | Devuelve una paleta de tema. |
 | `POST` | `/api/v1/theme/custom` | Adapta una paleta proporcionada por el cliente. |
-| `POST` | `/api/v1/test/suggest` | Sugiere un tipo de tema de forma orientativa. |
+| `POST` | `/api/v1/test/suggest` | Sugiere tipo, intensidad y contraste de forma orientativa. |
+| `POST` | `/api/v1/feedback` | Registra si la sugerencia resultó útil. |
 | `POST` | `/api/v1/simulate` | Simula un color con severidad continua. |
 | `POST` | `/api/v1/simulate/batch` | Simula entre 1 y 256 colores. |
 | `GET` | `/metrics` | Métricas Prometheus del servidor Go. |
@@ -134,7 +164,22 @@ curl -X POST http://localhost:8080/api/v1/theme/custom \
 
 Todos los colores de entrada deben usar `#RRGGBB`.
 
-### Test orientativo
+### Test orientativo — v1.5.0
+
+Las cuatro señales históricas continúan soportadas:
+
+- `reds_look_darker`;
+- `green_brown_confusion`;
+- `blue_yellow_confusion`;
+- `colors_look_gray`.
+
+v1.5.0 agrega señales opcionales:
+
+- `red_green_confusion`;
+- `red_black_confusion`;
+- `blue_green_confusion`;
+- `yellow_pink_confusion`;
+- `low_saturation_confusion`.
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/test/suggest \
@@ -143,13 +188,49 @@ curl -X POST http://localhost:8080/api/v1/test/suggest \
     "answers":{
       "reds_look_darker":false,
       "green_brown_confusion":false,
-      "blue_yellow_confusion":true,
-      "colors_look_gray":false
+      "blue_yellow_confusion":false,
+      "colors_look_gray":false,
+      "red_green_confusion":true,
+      "red_black_confusion":true,
+      "blue_green_confusion":false,
+      "yellow_pink_confusion":false,
+      "low_saturation_confusion":false
     }
   }'
 ```
 
-El resultado es una sugerencia de configuración. No constituye un diagnóstico médico.
+Respuesta de ejemplo:
+
+```json
+{
+  "suggested_type": "protanopia",
+  "severity": "moderate",
+  "high_contrast": false,
+  "disclaimer": "Resultado orientativo. No es un diagnóstico médico."
+}
+```
+
+Los campos históricos `suggested_type` y `disclaimer` se conservan.
+
+### Feedback de la sugerencia
+
+`POST /api/v1/feedback` registra si la configuración sugerida ayudó al usuario.
+
+```bash
+curl -X POST http://localhost:8080/api/v1/feedback \
+  -H 'Content-Type: application/json' \
+  -d '{"suggested_type":"deuteranopia","helpful":true}'
+```
+
+Respuesta:
+
+```json
+{
+  "status": "recorded"
+}
+```
+
+El endpoint no requiere nombre, correo ni identificador personal.
 
 ## Simulación de colores — v1.2.0
 
@@ -253,7 +334,7 @@ El enlace del badge abre los runs del workflow; el run exitoso más reciente de 
 Casos cubiertos por la paridad HTTP:
 
 - listado de tipos, tema legado y tema con parámetros;
-- paleta personalizada y test orientativo;
+- paleta personalizada, test orientativo ampliado y feedback;
 - errores históricos `invalid_type` e `invalid_parameter`;
 - severidades interpoladas de referencia (`0.25`, `0.5`, `0.65`) y los 11 anchors `0.0..1.0` de cada familia Machado;
 - protanopia, deuteranopia y tritanopia;
@@ -381,7 +462,7 @@ No se expone una ruta pública que provoque un panic deliberadamente. El servido
 
 ### Mensajes en inglés
 
-El servidor Go utiliza `Accept-Language` en errores controlados:
+Go, PHP, TypeScript/Node y Java utilizan `Accept-Language` en los errores controlados cubiertos por la paridad HTTP:
 
 ```bash
 curl -H 'Accept-Language: en' http://localhost:8080/api/v1/theme/no-existe
@@ -477,25 +558,25 @@ Una integración que aspire a WCAG debe evaluar esos aspectos por separado.
 
 ## Extensión de navegador: permisos y límites
 
-La extensión está en `extension/browser` y usa Manifest V3.
+La extensión está en `extension/browser`, utiliza Manifest V3 y en v1.5.0 deja de solicitar acceso permanente mediante `<all_urls>`.
 
 Permisos actuales:
 
-- `storage`: guarda `eyexType`, `eyexMode` y `eyexEnabled` mediante `storage.sync`;
-- `content_scripts.matches: <all_urls>`: permite que `content.js` inserte el estilo EyeX en páginas web compatibles.
+- `storage`: conserva la configuración de EyeX;
+- `activeTab`: permite actuar sobre la pestaña seleccionada después de una acción explícita del usuario;
+- `scripting`: permite inyectar `content.js` cuando EyeX se activa.
 
-La extensión no solicita `tabs`, `history`, `cookies`, `webRequest`, `downloads`, `clipboardRead`, `clipboardWrite` ni acceso a credenciales. El código actual no envía el contenido de la página a la API.
+El usuario puede activar o desactivar EyeX globalmente desde la extensión. El atajo predeterminado es `Alt+Shift+E`.
+
+La extensión no solicita `history`, `cookies`, `webRequest`, `downloads`, `clipboardRead` ni `clipboardWrite`, y no envía el contenido de la página a la API.
 
 Limitaciones relevantes:
 
-- `<all_urls>` es un alcance amplio y debe justificarse al publicar la extensión;
-- los navegadores bloquean content scripts en páginas internas como `chrome://`, `edge://` y otras superficies protegidas;
-- algunas tiendas, páginas privilegiadas, visores PDF e iframes pueden imponer restricciones adicionales;
-- estilos dentro de closed Shadow DOM no pueden ser reescritos desde el content script;
-- CSS con alta especificidad, canvas, imágenes y contenido renderizado por WebGL no necesariamente cambian con la inyección CSS;
-- la extensión aplica paletas locales y no ejecuta la nueva simulación pixel a pixel sobre la página.
-
-Consulta también `extension/browser/README.md`.
+- los navegadores bloquean scripts en páginas internas como `chrome://` y `edge://`;
+- tiendas, páginas privilegiadas, visores PDF e iframes pueden imponer restricciones;
+- closed Shadow DOM no puede reescribirse desde el content script;
+- canvas, imágenes y contenido WebGL no necesariamente cambian mediante CSS;
+- la extensión aplica paletas y no procesa cada píxel de la página mediante `/simulate`.
 
 ## SDKs
 
@@ -536,6 +617,18 @@ EYEX_PORT=8083 mvn spring-boot:run
 `openapi.yaml` es el contrato público versionado. `v1.2.0` agrega `/api/v1/simulate` y `/api/v1/simulate/batch` de forma aditiva; no modifica ni elimina las rutas de tema existentes.
 
 El CI valida que las rutas históricas y las nuevas continúen presentes y ejecuta la paridad HTTP del contrato v1 —incluida la simulación— antes de considerar el workflow correcto.
+
+## Producción, dominio y HTTPS — v1.5.0
+
+El servidor Go exige HTTPS cuando `EYEX_ENV=production`. Puede ejecutarse detrás de un proxy o ingress que termine TLS y envíe `X-Forwarded-Proto: https`.
+
+```bash
+EYEX_ENV=production EYEX_PORT=8080 go run ./cmd/api
+```
+
+La publicación pública requiere un proveedor de hosting, un dominio controlado por el proyecto y acceso a DNS/certificados. No debe considerarse completada hasta verificar externamente resolución DNS, certificado TLS válido, acceso HTTPS y respuesta correcta de `/api/v1/theme/types`.
+
+La v1.5.0 no agrega archivos `.env` adicionales.
 
 ## Versionado semántico y deprecación
 
